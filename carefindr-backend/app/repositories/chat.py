@@ -41,7 +41,10 @@ class ChatRepository:
         return list(result.scalars().all())
 
     async def save_messages(self, session_id: uuid.UUID, user_msg: str, bot_msg: str) -> None:
+        # Two separate commits so each message gets a distinct created_at timestamp,
+        # preserving order when loaded back via ORDER BY created_at.
         self.db.add(ChatMessage(session_id=session_id, role="user", content=user_msg))
+        await self.db.commit()
         self.db.add(ChatMessage(session_id=session_id, role="assistant", content=bot_msg))
         await self.db.commit()
 
